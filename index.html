@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Agents 是什麼？｜教學型簡報</title>
+<style>
+  :root{
+    --bg:#0f1221; --bg2:#161a30; --card:#1c2140; --ink:#eef1ff; --muted:#a7afce;
+    --accent:#6ea8fe; --accent2:#8affc1; --warn:#ffcf6e; --line:#2c3360; --chip:#242a4d;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+    background:radial-gradient(1200px 700px at 80% -10%,#20264a 0%,var(--bg) 55%);
+    color:var(--ink); overflow:hidden;
+  }
+  .deck{height:100vh;width:100vw;position:relative}
+  .slide{
+    position:absolute;inset:0;display:none;flex-direction:column;
+    padding:clamp(28px,5vw,80px) clamp(28px,7vw,120px);
+    animation:fade .4s ease;
+  }
+  .slide.active{display:flex}
+  @keyframes fade{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+  .kicker{color:var(--accent);font-weight:700;letter-spacing:.14em;font-size:clamp(12px,1.3vw,15px);text-transform:uppercase;margin-bottom:14px}
+  h1{font-size:clamp(34px,6.2vw,76px);line-height:1.08;font-weight:800;letter-spacing:-.01em}
+  h2{font-size:clamp(26px,4vw,46px);line-height:1.15;font-weight:800;margin-bottom:10px}
+  .lead{font-size:clamp(17px,2.1vw,25px);color:var(--muted);line-height:1.6;max-width:60ch}
+  .big{font-size:clamp(20px,2.4vw,30px);line-height:1.5}
+  p{line-height:1.6}
+  .grid{display:grid;gap:clamp(14px,1.6vw,22px);margin-top:26px}
+  .g2{grid-template-columns:1fr 1fr}
+  .g3{grid-template-columns:1fr 1fr 1fr}
+  .card{background:linear-gradient(180deg,var(--card),#171c38);border:1px solid var(--line);border-radius:18px;padding:clamp(16px,1.8vw,26px)}
+  .card h3{font-size:clamp(18px,2vw,24px);margin-bottom:8px;display:flex;align-items:center;gap:10px}
+  .card p{color:var(--muted);font-size:clamp(14px,1.45vw,18px)}
+  .chip{display:inline-block;background:var(--chip);border:1px solid var(--line);color:var(--accent);
+    padding:5px 12px;border-radius:999px;font-size:clamp(12px,1.3vw,15px);font-weight:600;margin:4px 6px 0 0}
+  .accent{color:var(--accent)} .accent2{color:var(--accent2)} .warn{color:var(--warn)}
+  ul{margin-top:16px;padding-left:0;list-style:none}
+  li{position:relative;padding-left:30px;margin:12px 0;font-size:clamp(16px,1.8vw,21px);line-height:1.55;color:#dfe4ff}
+  li::before{content:"";position:absolute;left:6px;top:11px;width:9px;height:9px;border-radius:3px;background:var(--accent)}
+  li small{color:var(--muted);font-size:.8em}
+  .num{font-size:clamp(12px,1.3vw,15px);color:var(--muted)}
+  .center{justify-content:center;align-items:flex-start}
+  .mid{justify-content:center}
+  /* flow diagram */
+  .flow{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:28px}
+  .node{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 20px;font-weight:700;font-size:clamp(14px,1.6vw,20px)}
+  .node.brain{border-color:var(--accent);box-shadow:0 0 0 3px rgba(110,168,254,.15)}
+  .arrow{color:var(--accent);font-size:clamp(20px,2.4vw,30px);font-weight:800}
+  .loop-note{margin-top:10px;color:var(--muted);font-size:clamp(13px,1.4vw,17px)}
+  /* architecture */
+  .arch{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:20px;margin-top:30px}
+  .brainbox{grid-column:2;text-align:center;background:linear-gradient(180deg,#223063,#1a2142);border:1.5px solid var(--accent);border-radius:20px;padding:26px 30px}
+  .brainbox .t{font-size:clamp(20px,2.4vw,30px);font-weight:800}
+  .brainbox .s{color:var(--muted);font-size:clamp(13px,1.4vw,16px);margin-top:4px}
+  .pill{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 18px}
+  .pill .t{font-weight:800;font-size:clamp(16px,1.8vw,22px)}
+  .pill .s{color:var(--muted);font-size:clamp(13px,1.4vw,17px);margin-top:4px}
+  table{width:100%;border-collapse:collapse;margin-top:22px;font-size:clamp(13px,1.5vw,18px)}
+  th,td{text-align:left;padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--accent);font-weight:700}
+  td.s{color:var(--muted)}
+  .srcs{margin-top:22px;display:grid;gap:12px}
+  .src{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 16px;font-size:clamp(13px,1.5vw,17px)}
+  .src b{color:var(--ink)} .src span{color:var(--muted)}
+  /* nav */
+  .bar{position:fixed;left:0;right:0;bottom:0;height:5px;background:#0c0f1e}
+  .bar > i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .3s}
+  .hud{position:fixed;bottom:16px;right:22px;display:flex;align-items:center;gap:14px;color:var(--muted);font-size:14px;z-index:5}
+  .btn{background:var(--card);border:1px solid var(--line);color:var(--ink);width:40px;height:40px;border-radius:10px;cursor:pointer;font-size:18px}
+  .btn:hover{border-color:var(--accent)}
+  .tag{position:fixed;top:18px;left:24px;color:var(--muted);font-size:13px;letter-spacing:.08em;z-index:5}
+  .hint{position:fixed;top:18px;right:24px;color:var(--muted);font-size:13px;z-index:5}
+  .quote{border-left:3px solid var(--accent);padding:6px 0 6px 18px;color:#dfe4ff;font-size:clamp(16px,1.9vw,22px);margin-top:20px;font-style:italic}
+  @media(max-width:720px){.g2,.g3{grid-template-columns:1fr}.arch{grid-template-columns:1fr}.brainbox{grid-column:1}.flow{gap:8px}}
+</style>
+</head>
+<body>
+<div class="tag">LLM Wiki · AI Agents</div>
+<div class="hint">← → 換頁</div>
+<div class="deck" id="deck">
+
+  <!-- 1 封面 -->
+  <section class="slide active center">
+    <div class="kicker">教學型簡報 · 原本不懂也能看懂</div>
+    <h1>AI Agents<br><span class="accent">是什麼？</span></h1>
+    <p class="lead" style="margin-top:26px">
+      從「問一次 AI」到「一個會自己規劃、查資料、動手、還會檢討的系統」。<br>
+      本簡報內容整理自一份自建的 <b class="accent2">LLM Wiki</b>（Anthropic、Lilian Weng、ReAct、Reflexion、綜述共 5 篇來源）。
+    </p>
+    <div style="margin-top:28px">
+      <span class="chip">定義</span><span class="chip">三大元件</span>
+      <span class="chip">ReAct 迴圈</span><span class="chip">Reflexion 反思</span>
+      <span class="chip">何時該用</span><span class="chip">限制</span>
+    </div>
+  </section>
+
+  <!-- 2 直覺比喻 -->
+  <section class="slide center">
+    <div class="kicker">先建立直覺</div>
+    <h2>先用一個生活比喻</h2>
+    <p class="big" style="color:var(--muted);max-width:62ch;margin-top:8px">
+      把 LLM 想成一個很會讀書的<b class="accent">大腦</b>。
+    </p>
+    <div class="grid g2">
+      <div class="card"><h3>🧠 只有大腦</h3><p>你問一句，它答一句。不能查最新資料、不能動手、答完就忘 —— 這是「一般的 LLM 呼叫」。</p></div>
+      <div class="card"><h3>🧑‍🔧 大腦 + 手腳 + 筆記本</h3><p>會列計畫、會查資料、會用工具、會把過程記下來、做錯會修正 —— 這就是 <b class="accent2">Agent</b>。</p></div>
+    </div>
+    <p class="loop-note">👉 一句話：<b class="accent">Agent 不是一顆更強的模型，而是一個「以 LLM 為大腦」的結構。</b></p>
+  </section>
+
+  <!-- 3 問題動機 -->
+  <section class="slide center">
+    <div class="kicker">為什麼需要 Agent</div>
+    <h2>「問一次」會遇到什麼問題？</h2>
+    <ul>
+      <li>需要<b class="accent">最新 / 外部資料</b>時，模型只能用訓練時的舊知識 → 容易<b class="warn">幻覺</b></li>
+      <li>任務要<b class="accent">很多步驟</b>（先查 A、再算 B、再彙整）時，一次回答塞不下也容易出錯</li>
+      <li>做錯了<b class="accent">沒有修正機制</b>，錯誤會一路沿著推理鏈傳播</li>
+      <li>不能真的<b class="accent">動手</b>（查資料庫、執行程式、呼叫 API）</li>
+    </ul>
+    <p class="loop-note">Agent 就是為了解決這些問題：<b class="accent2">讓 AI 會規劃、會行動、會檢查、會修正。</b></p>
+  </section>
+
+  <!-- 4 定義對比 -->
+  <section class="slide center">
+    <div class="kicker">核心定義</div>
+    <h2>Agent 與「一般 LLM 呼叫」差在哪？</h2>
+    <div class="grid g2">
+      <div class="card">
+        <h3>一般 LLM 呼叫</h3>
+        <p>輸入 → 輸出，<b>一次結束</b>。流程由人或固定程式決定。</p>
+      </div>
+      <div class="card" style="border-color:var(--accent)">
+        <h3 class="accent2">AI Agent</h3>
+        <p>LLM <b>動態主導</b>自己的流程與工具使用，在一個會回饋結果的環境中，以迴圈朝目標前進。</p>
+      </div>
+    </div>
+    <div class="quote">Agents：LLM「maintaining control over how they accomplish tasks.」<br><span class="num">— Anthropic, Building Effective Agents</span></div>
+  </section>
+
+  <!-- 5 架構 -->
+  <section class="slide center">
+    <div class="kicker">核心架構</div>
+    <h2>Agent＝LLM（大腦）＋ 三大元件</h2>
+    <div class="arch">
+      <div class="pill"><div class="t">🗺️ Planning 規劃</div><div class="s">把大任務拆成子目標、並反思修正</div></div>
+      <div class="brainbox"><div class="t">🧠 LLM</div><div class="s">核心控制器 / 大腦</div></div>
+      <div class="pill"><div class="t">🔧 Tool use 工具</div><div class="s">呼叫外部 API / 程式，取得模型沒有的能力</div></div>
+    </div>
+    <div style="display:flex;justify-content:center;margin-top:18px">
+      <div class="pill" style="max-width:520px;text-align:center"><div class="t">💾 Memory 記憶</div><div class="s">短期＝context window；長期＝外部向量資料庫</div></div>
+    </div>
+    <p class="loop-note" style="text-align:center">此架構為最廣被引用的框架 — <span class="num">Lilian Weng, LLM Powered Autonomous Agents（2023）</span></p>
+  </section>
+
+  <!-- 6 Planning -->
+  <section class="slide center">
+    <div class="kicker">元件一</div>
+    <h2>🗺️ Planning：先想清楚怎麼做</h2>
+    <div class="grid g2">
+      <div class="card"><h3>任務拆解</h3><p><b class="accent">Chain of Thought</b>：一步一步想。<br><b class="accent">Tree of Thoughts</b>：每步產生多個想法，像樹一樣搜尋最佳路徑。</p></div>
+      <div class="card"><h3>自我反思</h3><p>從過去行動學習、修正未來決策。代表方法：<b class="accent2">ReAct</b>、<b class="accent2">Reflexion</b>（後面詳講）。</p></div>
+    </div>
+    <p class="loop-note">重點：把一個「太大、一次做不完」的任務，拆成<b class="accent">可一步步完成的子目標</b>。</p>
+  </section>
+
+  <!-- 7 Memory -->
+  <section class="slide center">
+    <div class="kicker">元件二</div>
+    <h2>💾 Memory：短期與長期記憶</h2>
+    <div class="grid g2">
+      <div class="card"><h3>短期記憶</h3><p>放在 <b class="accent">context window</b> 裡的資訊（這次對話看得到的內容）。容量<b class="warn">有限</b>。</p></div>
+      <div class="card"><h3>長期記憶</h3><p>存在<b class="accent">外部向量資料庫</b>，需要時用快速相似度搜尋（ANN/MIPS）撈回來，突破 context 限制。</p></div>
+    </div>
+    <p class="loop-note">類比：短期＝桌面上攤開的紙；長期＝旁邊一整櫃可隨時翻找的檔案。</p>
+  </section>
+
+  <!-- 8 Tool use -->
+  <section class="slide center">
+    <div class="kicker">元件三</div>
+    <h2>🔧 Tool use：讓 AI 能「動手」</h2>
+    <ul>
+      <li>呼叫外部 API / 程式，補足模型缺的能力：<small>即時資料、精確計算、執行程式碼、查資料庫</small></li>
+      <li><b class="accent">MRKL</b>：LLM 把問題路由給專家模組（可為計算機等符號工具）</li>
+      <li><b class="accent">Toolformer</b>：訓練模型自己決定何時、怎麼呼叫工具</li>
+      <li>工程重點：<b class="accent2">工具說明要像寫 prompt 一樣用心設計（ACI）</b>，並用「防呆」降低誤用</li>
+    </ul>
+    <p class="loop-note"><span class="num">來源：Lilian Weng（2023）、Anthropic Building Effective Agents</span></p>
+  </section>
+
+  <!-- 9 ReAct loop -->
+  <section class="slide center">
+    <div class="kicker">核心迴圈（最重要）</div>
+    <h2>ReAct：想一步、做一步、看結果</h2>
+    <div class="flow">
+      <div class="node brain">💭 Thought<br><span class="num">推理：下一步該做什麼</span></div>
+      <div class="arrow">→</div>
+      <div class="node">⚙️ Action<br><span class="num">行動：呼叫工具 / 查資料</span></div>
+      <div class="arrow">→</div>
+      <div class="node">👀 Observation<br><span class="num">觀察：環境回傳的結果</span></div>
+      <div class="arrow">↺</div>
+    </div>
+    <p class="loop-note">重複這個迴圈，直到得出答案或觸發<b class="accent">停止條件</b>（如最大次數）。</p>
+    <p class="big" style="margin-top:14px">推理幫助<b class="accent">建立與調整計畫</b>；行動幫助<b class="accent2">取得外部資訊校正</b> → 兩者互補，減少幻覺。</p>
+    <p class="num" style="margin-top:10px">實證：在 ALFWorld / WebShop 成功率比模仿與強化學習基線提高 34 / 10 個百分點（Yao et al., ICLR 2023）。</p>
+  </section>
+
+  <!-- 10 Reflexion -->
+  <section class="slide center">
+    <div class="kicker">從失敗中學習</div>
+    <h2>Reflexion：寫檢討、下次改進</h2>
+    <div class="flow">
+      <div class="node">🎬 Actor<br><span class="num">嘗試（可用 ReAct）</span></div>
+      <div class="arrow">→</div>
+      <div class="node">⚖️ Evaluator<br><span class="num">判斷成敗 / 打分</span></div>
+      <div class="arrow">→</div>
+      <div class="node brain">📝 Self-Reflection<br><span class="num">用文字反省為何失敗</span></div>
+      <div class="arrow">↺</div>
+    </div>
+    <p class="loop-note">反省存進<b class="accent">記憶</b>，下一回合當作額外脈絡 → <b class="accent2">不用重新訓練模型</b>就能進步。</p>
+    <p class="big" style="margin-top:12px">和 ReAct 的差別：ReAct 是<b class="accent">同一回合內</b>想／做交錯；Reflexion 是<b class="accent2">跨回合</b>累積反省。</p>
+    <p class="num" style="margin-top:8px">代表數字：HumanEval 程式任務達 91% pass@1（Shinn et al., NeurIPS 2023）。</p>
+  </section>
+
+  <!-- 11 workflow vs agent -->
+  <section class="slide center">
+    <div class="kicker">實務：別一上來就用 Agent</div>
+    <h2>Workflow vs Agent：什麼時候用哪個？</h2>
+    <table>
+      <tr><th>　</th><th>Workflow 工作流</th><th>Agent 代理人</th></tr>
+      <tr><td><b>流程</b></td><td class="s">預先寫死的程式路徑</td><td class="s">LLM 動態自己決定</td></tr>
+      <tr><td><b>適合</b></td><td class="s">任務定義清楚、要可預測一致</td><td class="s">開放式、步數無法預測、需彈性</td></tr>
+      <tr><td><b>代價</b></td><td class="s">彈性低</td><td class="s">更貴、會累積錯誤，需大量測試</td></tr>
+    </table>
+    <p class="loop-note">原則：<b class="accent">先找最簡單的解</b>，常常「單次 LLM＋檢索＋範例」就夠；只在必要時才升級成 Agent。</p>
+    <p class="num" style="margin-top:6px">5 種常見 workflow 模式：Prompt chaining · Routing · Parallelization · Orchestrator-workers · Evaluator-optimizer（Anthropic）。</p>
+  </section>
+
+  <!-- 12 限制 -->
+  <section class="slide center">
+    <div class="kicker">誠實面對</div>
+    <h2>⚠️ 目前的限制與風險</h2>
+    <div class="grid g3">
+      <div class="card"><h3>📏 Context 有限</h3><p>能放進的歷史 / 工具輸出有上限，檢索有幫助但不如完整 attention。</p></div>
+      <div class="card"><h3>🧭 長程規劃難</h3><p>長任務規劃、以及從意外錯誤中恢復，仍很困難。</p></div>
+      <div class="card"><h3>🔌 介面不可靠</h3><p>輸出格式錯誤、不照指令，很多程式碼都在解析與防呆。</p></div>
+    </div>
+    <p class="loop-note">加上：Agent <b class="warn">更貴、會累積錯誤</b>，正式上線前要在 sandbox 大量測試並加 guardrails。</p>
+  </section>
+
+  <!-- 13 小結 -->
+  <section class="slide center">
+    <div class="kicker">一句話帶走</div>
+    <h2>總結</h2>
+    <div class="quote" style="font-size:clamp(20px,2.6vw,32px);font-style:normal">
+      AI Agent＝以 <b class="accent">LLM 為大腦</b>的系統，
+      用 <b class="accent2">規劃＋記憶＋工具</b>，
+      以「<b>推理→行動→觀察</b>」的迴圈自主朝目標前進，還能<b class="accent2">從失敗中修正</b>。
+    </div>
+    <ul style="margin-top:24px">
+      <li>不懂技術也要記得的三件事：它會<b class="accent">規劃</b>、會<b class="accent">動手</b>、會<b class="accent">修正</b></li>
+      <li>不是越複雜越好 —— <b class="accent2">先用最簡單的解</b></li>
+      <li>它很強，但有限制，需要測試與把關</li>
+    </ul>
+  </section>
+
+  <!-- 14 來源 -->
+  <section class="slide center">
+    <div class="kicker">知識來源（本簡報的 LLM Wiki）</div>
+    <h2>參考來源 · 5 篇</h2>
+    <div class="srcs">
+      <div class="src"><b>1. Building Effective Agents</b> — Anthropic Engineering（2024）<br><span>Workflow vs Agent、augmented LLM、5 種工作流模式</span></div>
+      <div class="src"><b>2. LLM Powered Autonomous Agents</b> — Lilian Weng, Lil'Log（2023）<br><span>Agent＝LLM＋Planning＋Memory＋Tool use 的經典架構</span></div>
+      <div class="src"><b>3. ReAct: Synergizing Reasoning and Acting</b> — Yao et al., ICLR 2023（arXiv:2210.03629）<br><span>Thought→Action→Observation 迴圈</span></div>
+      <div class="src"><b>4. Reflexion: Verbal Reinforcement Learning</b> — Shinn et al., NeurIPS 2023（arXiv:2303.11366）<br><span>用語言回饋自我反思、從失敗學習</span></div>
+      <div class="src"><b>5. A Survey on LLM-based Autonomous Agents</b> — Wang et al.（arXiv:2308.11432）<br><span>construction / application / evaluation 的整體地圖</span></div>
+    </div>
+  </section>
+
+</div>
+
+<div class="hud">
+  <button class="btn" id="prev" aria-label="上一頁">‹</button>
+  <span id="count">1 / 14</span>
+  <button class="btn" id="next" aria-label="下一頁">›</button>
+</div>
+<div class="bar"><i id="prog"></i></div>
+
+<script>
+  const slides=[...document.querySelectorAll('.slide')];
+  let i=0;
+  function show(n){
+    i=Math.max(0,Math.min(slides.length-1,n));
+    slides.forEach((s,k)=>s.classList.toggle('active',k===i));
+    document.getElementById('count').textContent=(i+1)+' / '+slides.length;
+    document.getElementById('prog').style.width=((i+1)/slides.length*100)+'%';
+  }
+  document.getElementById('next').onclick=()=>show(i+1);
+  document.getElementById('prev').onclick=()=>show(i-1);
+  document.addEventListener('keydown',e=>{
+    if(e.key==='ArrowRight'||e.key==='PageDown'||e.key===' '){e.preventDefault();show(i+1);}
+    if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();show(i-1);}
+    if(e.key==='Home')show(0); if(e.key==='End')show(slides.length-1);
+  });
+  // swipe for touch
+  let x0=null;
+  document.addEventListener('touchstart',e=>x0=e.touches[0].clientX,{passive:true});
+  document.addEventListener('touchend',e=>{if(x0===null)return;const dx=e.changedTouches[0].clientX-x0;if(Math.abs(dx)>50)show(i+(dx<0?1:-1));x0=null;},{passive:true});
+  show(0);
+</script>
+</body>
+</html>
